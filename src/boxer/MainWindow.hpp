@@ -1,5 +1,6 @@
 #pragma once
 
+#include "VisualisationWidget.hpp"
 #include <AMReX_AmrCore.H>
 
 #include <QBoxLayout>
@@ -18,11 +19,12 @@ class MainWindow : public QMainWindow {
 
   private:
     void connectLevelSelect();
+    void connectShowHalo();
 
   private:
     const amrex::AmrCore& container; // reference to the displayed data
 
-    QWidget openGLPlaceHolder;
+    VisualisationWidget visualisation;
 
     QSpinBox coarsestDisplayLevel;
     QSpinBox finestDisplayLevel;

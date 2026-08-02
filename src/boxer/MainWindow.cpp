@@ -1,13 +1,14 @@
 #include "MainWindow.hpp"
+#include <qcheckbox.h>
 
 namespace boxer {
-MainWindow::MainWindow(const amrex::AmrCore& container) : container(container) {
+MainWindow::MainWindow(const amrex::AmrCore& container) : container(container), visualisation(container, false, this) {
     setMinimumSize(800, 600);
 
     auto* centralWidget = new QWidget(this);
 
     auto* layout = new QVBoxLayout(centralWidget);
-    layout->addWidget(&openGLPlaceHolder, 1);
+    layout->addWidget(&visualisation, 1);
 
     auto* settingsLayout = new QHBoxLayout();
 
@@ -33,6 +34,7 @@ MainWindow::MainWindow(const amrex::AmrCore& container) : container(container) {
     layout->addLayout(settingsLayout, 0);
 
     connectLevelSelect();
+    connectShowHalo();
 
     setCentralWidget(centralWidget);
 }
@@ -42,12 +44,23 @@ void MainWindow::connectLevelSelect() {
     connect(&coarsestDisplayLevel, &QSpinBox::valueChanged, this, [this](int newCoarsest) {
         finestDisplayLevel.setMinimum(newCoarsest);
         // finestDisplayLevel.maximum stays permanently at container.finestLevel()
+
+        // TODO: implement update on OpenGL widget
     });
 
     // When finestDisplayLevel changes, coarsestLevel can't exceed it
     connect(&finestDisplayLevel, &QSpinBox::valueChanged, this, [this](int newFinest) {
         coarsestDisplayLevel.setMaximum(newFinest);
         // coarsestDisplayLevel.minimum stays permanently at 0
+
+        // TODO: implement update on OpenGL widget
+    });
+}
+
+void MainWindow::connectShowHalo() {
+    connect(&showHalo, &QCheckBox::checkStateChanged, this, [this](Qt::CheckState state) {
+        bool isChecked = (state == Qt::Checked);
+        // TODO: implement update on OpenGL widget
     });
 }
 }; // namespace boxer
