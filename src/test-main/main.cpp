@@ -34,11 +34,8 @@ int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU d
                                     amrex::IntVect(AMREX_D_DECL(8, 8, 8)), amrex::IntVect(AMREX_D_DECL(8, 8, 8)),
                                     amrex::IntVect(AMREX_D_DECL(8, 8, 8))};
 
-        amr_info.max_grid_size = {
-            amrex::IntVect(AMREX_D_DECL(32, 64, 16)), amrex::IntVect(AMREX_D_DECL(32, 64, 16)),
-            amrex::IntVect(AMREX_D_DECL(32, 64, 16)), amrex::IntVect(AMREX_D_DECL(32, 64, 16)),
-            amrex::IntVect(AMREX_D_DECL(32, 64, 16)),
-        };
+        auto max_grid_size = amrex::IntVect(AMREX_D_DECL(32, 32, 32));
+        amr_info.max_grid_size = {max_grid_size, max_grid_size, max_grid_size, max_grid_size, max_grid_size};
 
         // Construct your AmrCore derivative
         int ngrow = 1;

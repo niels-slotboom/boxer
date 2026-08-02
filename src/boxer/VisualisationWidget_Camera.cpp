@@ -6,17 +6,17 @@
 
 namespace boxer {
 void VisualisationWidget::updateViewMatrix() {
-    // Convert spherical coordinates (distance, azimuth, elevation) to Cartesian offset
     float radAzimuth = -qDegreesToRadians(cameraAzimuth);
     float radElevation = qDegreesToRadians(cameraElevation);
 
-    float x = cameraDistance * std::cos(radElevation) * std::cos(radAzimuth);
-    float y = cameraDistance * std::sin(radElevation);
-    float z = cameraDistance * std::cos(radElevation) * std::sin(radAzimuth);
+    // Spherical coordinates mapped to Z-up:
+    // X = right, Y = forward/depth, Z = up
+    float x = -cameraDistance * std::cos(radElevation) * std::sin(radAzimuth);
+    float y = -cameraDistance * std::cos(radElevation) * std::cos(radAzimuth);
+    float z = cameraDistance * std::sin(radElevation);
 
-    // Shift eye position relative to domain center
     QVector3D eyePosition = cameraTarget + QVector3D(x, y, z);
-    QVector3D upVector(0.0f, 1.0f, 0.0f);
+    QVector3D upVector(0.0f, 0.0f, 1.0f); // Set Z as Up vector
 
     viewMatrix.setToIdentity();
     viewMatrix.lookAt(eyePosition, cameraTarget, upVector);
