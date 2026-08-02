@@ -1,6 +1,61 @@
+#include "AMRContainer.hpp"
 #include <iostream>
 
-int main(int argc, char* argv[]) {
-    std::cout << "Hello, World!" << std::endl;
+int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU device selection, etc.)
+    amrex::Initialize(argc, argv);
+    {
+        constexpr int dim = AMREX_SPACEDIM;
+
+        // Index space: 32^3 cells
+        amrex::Box domain(amrex::IntVect(AMREX_D_DECL(0, 0, 0)), amrex::IntVect(AMREX_D_DECL(63, 63, 63)));
+
+        // Physical domain: [0,1]^3
+        amrex::RealBox real_box({AMREX_D_DECL(0.0, 0.0, 0.0)}, {AMREX_D_DECL(1.0, 1.0, 1.0)});
+
+        std::array<int, dim> is_periodic{AMREX_D_DECL(1, 1, 1)};
+
+        amrex::Geometry geom(domain, &real_box, 0, is_periodic.data());
+
+        // -----------------------------------------------------------------------------
+        // AMR configuration
+        // -----------------------------------------------------------------------------
+
+        amrex::AmrInfo amr_info;
+
+        amr_info.max_level = 2;
+
+        amr_info.ref_ratio = {amrex::IntVect(AMREX_D_DECL(2, 2, 2)), amrex::IntVect(AMREX_D_DECL(2, 2, 2)),
+                              amrex::IntVect(AMREX_D_DECL(2, 2, 2)), amrex::IntVect(AMREX_D_DECL(2, 2, 2))};
+
+        amr_info.n_error_buf = {amrex::IntVect(AMREX_D_DECL(1, 1, 1)), amrex::IntVect(AMREX_D_DECL(1, 1, 1)),
+                                amrex::IntVect(AMREX_D_DECL(1, 1, 1)), amrex::IntVect(AMREX_D_DECL(1, 1, 1))};
+
+        amr_info.blocking_factor = {amrex::IntVect(AMREX_D_DECL(8, 8, 8)), amrex::IntVect(AMREX_D_DECL(8, 8, 8)),
+                                    amrex::IntVect(AMREX_D_DECL(8, 8, 8)), amrex::IntVect(AMREX_D_DECL(8, 8, 8)),
+                                    amrex::IntVect(AMREX_D_DECL(8, 8, 8))};
+
+        amr_info.max_grid_size = {amrex::IntVect(AMREX_D_DECL(32, 32, 32)), amrex::IntVect(AMREX_D_DECL(32, 32, 32)),
+                                  amrex::IntVect(AMREX_D_DECL(32, 32, 32)), amrex::IntVect(AMREX_D_DECL(32, 32, 32)),
+                                  amrex::IntVect(AMREX_D_DECL(32, 32, 32))};
+
+        // Construct your AmrCore derivative
+        AMRContainer amr(geom, amr_info, 1, 1);
+
+        amr.printLevelInfo();
+
+        amr.InitFromScratch(0.0);
+
+        amr.printLevelInfo();
+
+        amr.regrid(0, 0.0);
+
+        amr.printLevelInfo();
+
+        amr.regrid(0, 0.0);
+
+        amr.printLevelInfo();
+    }
+    // Clean up resources
+    amrex::Finalize();
     return 0;
 }
