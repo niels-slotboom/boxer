@@ -15,7 +15,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
   public:
     MainWindow() = delete;
-    MainWindow(const amrex::AmrCore& container);
+    MainWindow(const amrex::AmrCore& container, int ngrow = 0);
 
   private:
     void connectLevelSelect();

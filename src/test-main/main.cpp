@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU d
         amrex::Box domain(amrex::IntVect(AMREX_D_DECL(0, 0, 0)), amrex::IntVect(AMREX_D_DECL(63, 63, 63)));
 
         // Physical domain: [0,1]^3
-        amrex::RealBox real_box({AMREX_D_DECL(0.0, 0.0, 0.0)}, {AMREX_D_DECL(1.0, 1.0, 1.0)});
+        amrex::RealBox real_box({AMREX_D_DECL(-2.0, -2.0, -2.0)}, {AMREX_D_DECL(2.0, 2.0, 2.0)});
 
         std::array<int, dim> is_periodic{AMREX_D_DECL(1, 1, 1)};
 
@@ -34,14 +34,18 @@ int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU d
                                     amrex::IntVect(AMREX_D_DECL(8, 8, 8)), amrex::IntVect(AMREX_D_DECL(8, 8, 8)),
                                     amrex::IntVect(AMREX_D_DECL(8, 8, 8))};
 
-        amr_info.max_grid_size = {amrex::IntVect(AMREX_D_DECL(32, 32, 32)), amrex::IntVect(AMREX_D_DECL(32, 32, 32)),
-                                  amrex::IntVect(AMREX_D_DECL(32, 32, 32)), amrex::IntVect(AMREX_D_DECL(32, 32, 32)),
-                                  amrex::IntVect(AMREX_D_DECL(32, 32, 32))};
+        amr_info.max_grid_size = {
+            amrex::IntVect(AMREX_D_DECL(32, 64, 16)), amrex::IntVect(AMREX_D_DECL(32, 64, 16)),
+            amrex::IntVect(AMREX_D_DECL(32, 64, 16)), amrex::IntVect(AMREX_D_DECL(32, 64, 16)),
+            amrex::IntVect(AMREX_D_DECL(32, 64, 16)),
+        };
 
         // Construct your AmrCore derivative
-        AMRContainer amr(geom, amr_info, 1, 1);
+        int ngrow = 1;
+
+        AMRContainer amr(geom, amr_info, 1, ngrow);
         amr.InitFromScratch(0.0);
-        boxer::show(amr);
+        boxer::show(amr, ngrow);
     }
     // Clean up resources
     amrex::Finalize();

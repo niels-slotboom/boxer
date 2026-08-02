@@ -2,5 +2,5 @@
 #include "AMReX_AmrCore.H"
 
 namespace boxer {
-void show(const amrex::AmrCore& container, bool blocking = true);
+void show(const amrex::AmrCore& container, int ngrow = 0, bool blocking = true);
 }

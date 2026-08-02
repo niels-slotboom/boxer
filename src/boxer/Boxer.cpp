@@ -7,7 +7,7 @@
 #include <qnamespace.h>
 
 namespace boxer {
-void show(const amrex::AmrCore& container, bool blocking) {
+void show(const amrex::AmrCore& container, int ngrow, bool blocking) {
     // Ensure Qt event loop
     if (!QApplication::instance()) {
         static int dummy_argc = 1;
@@ -17,7 +17,7 @@ void show(const amrex::AmrCore& container, bool blocking) {
     }
 
     // open a window
-    MainWindow* window = new MainWindow(container);
+    MainWindow* window = new MainWindow(container, ngrow);
     window->setAttribute(Qt::WA_DeleteOnClose);
     window->show();
 

@@ -2,7 +2,8 @@
 #include <qcheckbox.h>
 
 namespace boxer {
-MainWindow::MainWindow(const amrex::AmrCore& container) : container(container), visualisation(container, false, this) {
+MainWindow::MainWindow(const amrex::AmrCore& container, int ngrow)
+    : container(container), visualisation(container, false, ngrow, this) {
     setMinimumSize(800, 600);
 
     auto* centralWidget = new QWidget(this);
@@ -45,7 +46,7 @@ void MainWindow::connectLevelSelect() {
         finestDisplayLevel.setMinimum(newCoarsest);
         // finestDisplayLevel.maximum stays permanently at container.finestLevel()
 
-        // TODO: implement update on OpenGL widget
+        visualisation.setCoarsestDisplayLevel(newCoarsest);
     });
 
     // When finestDisplayLevel changes, coarsestLevel can't exceed it
@@ -53,14 +54,14 @@ void MainWindow::connectLevelSelect() {
         coarsestDisplayLevel.setMaximum(newFinest);
         // coarsestDisplayLevel.minimum stays permanently at 0
 
-        // TODO: implement update on OpenGL widget
+        visualisation.setFinestDisplayLevel(newFinest);
     });
 }
 
 void MainWindow::connectShowHalo() {
     connect(&showHalo, &QCheckBox::checkStateChanged, this, [this](Qt::CheckState state) {
         bool isChecked = (state == Qt::Checked);
-        // TODO: implement update on OpenGL widget
+        visualisation.setShowHalo(isChecked);
     });
 }
 }; // namespace boxer
