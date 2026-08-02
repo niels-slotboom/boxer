@@ -1,5 +1,5 @@
 #include "AMRContainer.hpp"
-#include <iostream>
+#include "Boxer.hpp"
 
 int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU device selection, etc.)
     amrex::Initialize(argc, argv);
@@ -40,20 +40,8 @@ int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU d
 
         // Construct your AmrCore derivative
         AMRContainer amr(geom, amr_info, 1, 1);
-
-        amr.printLevelInfo();
-
         amr.InitFromScratch(0.0);
-
-        amr.printLevelInfo();
-
-        amr.regrid(0, 0.0);
-
-        amr.printLevelInfo();
-
-        amr.regrid(0, 0.0);
-
-        amr.printLevelInfo();
+        boxer::show(amr);
     }
     // Clean up resources
     amrex::Finalize();
