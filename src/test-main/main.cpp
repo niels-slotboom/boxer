@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU d
 
         amrex::AmrInfo amr_info;
 
-        amr_info.max_level = 2;
+        amr_info.max_level = 3;
 
         amr_info.ref_ratio = {amrex::IntVect(AMREX_D_DECL(2, 2, 2)), amrex::IntVect(AMREX_D_DECL(2, 2, 2)),
                               amrex::IntVect(AMREX_D_DECL(2, 2, 2)), amrex::IntVect(AMREX_D_DECL(2, 2, 2))};
