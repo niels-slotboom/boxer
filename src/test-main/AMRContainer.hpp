@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <ostream>
+#include <stdexcept>
 
 #include "AMReX.H"
 #include "AMReX_AmrCore.H"
@@ -110,6 +111,14 @@ class AMRContainer : public amrex::AmrCore {
                                       Geom(lev), phys_bc, 0, phys_bc, 0, refRatio(lev - 1), &amrex::cell_cons_interp,
                                       bcs, 0);
         }
+    }
+
+  public:
+    const amrex::MultiFab& getState(int lev) const {
+        if (lev < 0 || lev > finestLevel()) {
+            throw std::runtime_error("Requested level " + std::to_string(lev) + " does not exist");
+        }
+        return state[lev];
     }
 
   public:

@@ -42,10 +42,17 @@ int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU d
         int ngrow = 1;
 
         PortableFunction initialData([] AMREX_GPU_DEVICE(amrex::Real x, amrex::Real y, amrex::Real z, int i, int j,
-                                                         int k) -> amrex::Real { return 0.0; });
+                                                         int k) -> amrex::Real { return 1.0; });
 
         AMRContainer amr(geom, amr_info, initialData, 1, ngrow);
         amr.InitFromScratch(0.0);
+
+        const auto& mf = amr.getState(0);
+        amrex::Real min_val = mf.min(0);
+        amrex::Real max_val = mf.max(0);
+
+        amrex::Print() << "Level 0 Min: " << min_val << " | Max: " << max_val << "\n";
+
         boxer::show(amr, ngrow);
     }
     // Clean up resources
