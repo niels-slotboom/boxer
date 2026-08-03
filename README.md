@@ -9,8 +9,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Fetch Boxer repo from GitHub using FetchContent
 include(FetchContent)
-FetchContent_Declare(
+FetchContent_Declare( 
     Boxer
     GIT_REPOSITORY https://github.com/niels-slotboom/boxer.git
     GIT_TAG        main
@@ -24,7 +25,7 @@ FetchContent_MakeAvailable(Boxer)
 
 add_executable(boxer-app src/main.cpp)
 
-target_link_libraries(boxer-app PRIVATE boxer) // the static library target in the repo is called "boxer"
+target_link_libraries(boxer-app PRIVATE boxer) # the static library target in the repo is called "boxer"
 ```
 The API of `boxer` is provided by `Boxer.hpp`, which contains `boxer::show(const amrex::AmrCore& container, int ngrow)`. 
 This function may be used as in the following example `main.cpp`:
