@@ -24,7 +24,7 @@ FetchContent_MakeAvailable(Boxer)
 
 add_executable(boxer-app src/main.cpp)
 
-target_link_libraries(boxer-app PRIVATE boxer)
+target_link_libraries(boxer-app PRIVATE boxer) // the static library target in the repo is called "boxer"
 ```
 The API of `boxer` is provided by `Boxer.hpp`, which contains `boxer::show(const amrex::AmrCore& container, int ngrow)`. 
 This function may be used as in the following example `main.cpp`:
