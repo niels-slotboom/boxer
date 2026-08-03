@@ -1,5 +1,6 @@
 #include "AMRContainer.hpp"
 #include "Boxer.hpp"
+#include "PortableFunction.hpp"
 
 int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU device selection, etc.)
     amrex::Initialize(argc, argv);
@@ -40,7 +41,10 @@ int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU d
         // Construct your AmrCore derivative
         int ngrow = 1;
 
-        AMRContainer amr(geom, amr_info, 1, ngrow);
+        PortableFunction initialData([] AMREX_GPU_DEVICE(amrex::Real x, amrex::Real y, amrex::Real z, int i, int j,
+                                                         int k) -> amrex::Real { return 0.0; });
+
+        AMRContainer amr(geom, amr_info, initialData, 1, ngrow);
         amr.InitFromScratch(0.0);
         boxer::show(amr, ngrow);
     }

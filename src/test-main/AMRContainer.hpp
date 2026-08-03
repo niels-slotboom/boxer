@@ -11,6 +11,8 @@
 #include "AMReX_MultiFab.H"
 #include "AMReX_MultiFabUtil.H"
 
+#include "PortableFunction.hpp"
+
 /**
  * @brief AMRContainer manages adaptive mesh refinement levels, field storage,
  *        regridding lifecycle callbacks, and boundary synchronizations using AMReX.
@@ -26,10 +28,11 @@ class AMRContainer : public amrex::AmrCore {
      * @param nvar      Number of state variables per grid cell.
      * @param ngrow     Number of ghost cells needed around valid patch data.
      */
-    AMRContainer(const amrex::Geometry& lev0_geom, const amrex::AmrInfo& amr_info, int nvar, int ngrow)
+    AMRContainer(const amrex::Geometry& lev0_geom, const amrex::AmrInfo& amr_info, PortableFunction initialData,
+                 int nvar, int ngrow)
         : AmrCore(lev0_geom, amr_info), nvar(nvar), ngrow(ngrow),
           state(amr_info.max_level + 1), // Preallocate storage for up to max_level + 1 levels
-          bcs(nvar) {
+          bcs(nvar), initialData(std::move(initialData)) {
 
         // Initialize boundary condition metadata (defaulting to internal / periodic boundaries)
         for (int i = 0; i < nvar; ++i) {
@@ -71,6 +74,7 @@ class AMRContainer : public amrex::AmrCore {
             amrex::AllPrint() << oss.str() << std::flush;
             totalCells += totalCellsThisLev;
         }
+        amrex::AllPrint() << "Total number of cells: " << totalCells << std::endl;
     }
 
     /**
@@ -159,7 +163,24 @@ class AMRContainer : public amrex::AmrCore {
     virtual void MakeNewLevelFromScratch(int lev, amrex::Real time, const amrex::BoxArray& ba,
                                          const amrex::DistributionMapping& dm) override {
         state[lev].define(ba, dm, nvar, ngrow);
-        state[lev].setVal(0.0);
+
+        auto loc_initialData = initialData;
+        // fill with initialData functor
+        for (amrex::MFIter mfi(state[lev]); mfi.isValid(); ++mfi) {
+            const auto& box = mfi.validbox();
+            auto prob_lo = Geom(lev).ProbLoArray(); // Returns amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>
+            auto dx = Geom(lev).CellSizeArray();    // Returns amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>
+
+            const auto& arr = state[lev].array(mfi);
+
+            amrex::ParallelFor(box, [=] AMREX_GPU_DEVICE(int i, int j, int k) {
+                amrex::Real x = prob_lo[0] + (i + 0.5) * dx[0];
+                amrex::Real y = prob_lo[1] + (j + 0.5) * dx[1];
+                amrex::Real z = prob_lo[2] + (k + 0.5) * dx[2];
+
+                arr(i, j, k, 0) = loc_initialData(x, y, z, i, j, k);
+            });
+        }
     }
 
     /**
@@ -205,4 +226,5 @@ class AMRContainer : public amrex::AmrCore {
     int ngrow;                            ///< Ghost cell halo layer size
     amrex::Vector<amrex::MultiFab> state; ///< Per-level storage arrays
     amrex::Vector<amrex::BCRec> bcs;      ///< Per-variable boundary condition descriptors
+    PortableFunction initialData;         ///< functor that generates initial data
 };
