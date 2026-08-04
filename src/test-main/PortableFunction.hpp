@@ -49,16 +49,16 @@ class PortableFunction {
     PortableFunction() = default;
 
     // PURE DEVICE operator(): Called strictly inside amrex::ParallelFor kernels
-    AMREX_GPU_DEVICE AMREX_FORCE_INLINE amrex::Real operator()(amrex::Real x, amrex::Real y, amrex::Real z, int i,
-                                                               int j, int k) const noexcept {
+    AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE amrex::Real operator()(amrex::Real x, amrex::Real y, amrex::Real z, int i,
+                                                                    int j, int k) const noexcept {
         return m_invoker(m_storage, x, y, z, i, j, k);
     }
 
   private:
     // Static device invoker function
     template <typename F>
-    AMREX_GPU_DEVICE static amrex::Real invoker_impl(const void* buf, amrex::Real x, amrex::Real y, amrex::Real z,
-                                                     int i, int j, int k) noexcept {
+    AMREX_GPU_HOST_DEVICE static amrex::Real invoker_impl(const void* buf, amrex::Real x, amrex::Real y, amrex::Real z,
+                                                          int i, int j, int k) noexcept {
         const F& functor = *reinterpret_cast<const F*>(buf);
         return functor(x, y, z, i, j, k);
     }

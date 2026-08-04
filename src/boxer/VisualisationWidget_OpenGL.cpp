@@ -1,5 +1,7 @@
 #include "VisualisationWidget.hpp"
+
 #include <QOpenGLShader>
+#include <cstddef>
 #include <vector>
 
 namespace boxer {
@@ -131,12 +133,13 @@ void VisualisationWidget::initializeGL() {
     axisShaderProgram.link();
     axisMvpUniformLoc = axisShaderProgram.uniformLocation("mvp");
 
+    // Coordinate Axes (X: Red, Y: Green, Z: Blue from origin)
     std::vector<float> axisVertices = {// X Axis (Red)
-                                       -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                                       0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
                                        // Y Axis (Green)
-                                       0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+                                       0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
                                        // Z Axis (Blue)
-                                       0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
+                                       0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
 
     glGenVertexArrays(1, &axesVAO);
     glGenBuffers(1, &axesVBO);
@@ -146,11 +149,11 @@ void VisualisationWidget::initializeGL() {
     glBufferData(GL_ARRAY_BUFFER, axisVertices.size() * sizeof(float), axisVertices.data(), GL_STATIC_DRAW);
 
     // Attrib 0: Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(0));
     glEnableVertexAttribArray(0);
 
     // Attrib 1: Color
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -204,24 +207,28 @@ void VisualisationWidget::initializeGL() {
 
     glBindBuffer(GL_ARRAY_BUFFER, unitCubeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(unitCubeLineVertices), unitCubeLineVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
     glEnableVertexAttribArray(0);
     glVertexAttribDivisor(0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, boxVBO);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(BoxInstanceData), (void*)offsetof(BoxInstanceData, lo));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(AmrMeshWrapper::BoxInstanceData),
+                          reinterpret_cast<void*>(offsetof(AmrMeshWrapper::BoxInstanceData, lo)));
     glEnableVertexAttribArray(1);
     glVertexAttribDivisor(1, 1);
 
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(BoxInstanceData), (void*)offsetof(BoxInstanceData, hi));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(AmrMeshWrapper::BoxInstanceData),
+                          reinterpret_cast<void*>(offsetof(AmrMeshWrapper::BoxInstanceData, hi)));
     glEnableVertexAttribArray(2);
     glVertexAttribDivisor(2, 1);
 
-    glVertexAttribIPointer(3, 1, GL_INT, sizeof(BoxInstanceData), (void*)offsetof(BoxInstanceData, level));
+    glVertexAttribIPointer(3, 1, GL_INT, sizeof(AmrMeshWrapper::BoxInstanceData),
+                           reinterpret_cast<void*>(offsetof(AmrMeshWrapper::BoxInstanceData, level)));
     glEnableVertexAttribArray(3);
     glVertexAttribDivisor(3, 1);
 
-    glVertexAttribIPointer(4, 1, GL_INT, sizeof(BoxInstanceData), (void*)offsetof(BoxInstanceData, isHalo));
+    glVertexAttribIPointer(4, 1, GL_INT, sizeof(AmrMeshWrapper::BoxInstanceData),
+                           reinterpret_cast<void*>(offsetof(AmrMeshWrapper::BoxInstanceData, isHalo)));
     glEnableVertexAttribArray(4);
     glVertexAttribDivisor(4, 1);
 
@@ -232,25 +239,29 @@ void VisualisationWidget::initializeGL() {
 
     glBindBuffer(GL_ARRAY_BUFFER, boxFaceVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(unitCubeTriangleVertices), unitCubeTriangleVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), reinterpret_cast<void*>(0));
     glEnableVertexAttribArray(0);
     glVertexAttribDivisor(0, 0);
 
     // Reuse identical instance attributes from boxVBO
     glBindBuffer(GL_ARRAY_BUFFER, boxVBO);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(BoxInstanceData), (void*)offsetof(BoxInstanceData, lo));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(AmrMeshWrapper::BoxInstanceData),
+                          reinterpret_cast<void*>(offsetof(AmrMeshWrapper::BoxInstanceData, lo)));
     glEnableVertexAttribArray(1);
     glVertexAttribDivisor(1, 1);
 
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(BoxInstanceData), (void*)offsetof(BoxInstanceData, hi));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(AmrMeshWrapper::BoxInstanceData),
+                          reinterpret_cast<void*>(offsetof(AmrMeshWrapper::BoxInstanceData, hi)));
     glEnableVertexAttribArray(2);
     glVertexAttribDivisor(2, 1);
 
-    glVertexAttribIPointer(3, 1, GL_INT, sizeof(BoxInstanceData), (void*)offsetof(BoxInstanceData, level));
+    glVertexAttribIPointer(3, 1, GL_INT, sizeof(AmrMeshWrapper::BoxInstanceData),
+                           reinterpret_cast<void*>(offsetof(AmrMeshWrapper::BoxInstanceData, level)));
     glEnableVertexAttribArray(3);
     glVertexAttribDivisor(3, 1);
 
-    glVertexAttribIPointer(4, 1, GL_INT, sizeof(BoxInstanceData), (void*)offsetof(BoxInstanceData, isHalo));
+    glVertexAttribIPointer(4, 1, GL_INT, sizeof(AmrMeshWrapper::BoxInstanceData),
+                           reinterpret_cast<void*>(offsetof(AmrMeshWrapper::BoxInstanceData, isHalo)));
     glEnableVertexAttribArray(4);
     glVertexAttribDivisor(4, 1);
 

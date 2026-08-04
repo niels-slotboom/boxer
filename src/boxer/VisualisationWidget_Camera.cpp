@@ -1,10 +1,13 @@
 #include "VisualisationWidget.hpp"
+
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <QtMath>
 #include <algorithm>
+#include <cmath>
 
 namespace boxer {
+
 void VisualisationWidget::updateViewMatrix() {
     float radAzimuth = -qDegreesToRadians(cameraAzimuth);
     float radElevation = qDegreesToRadians(cameraElevation);
@@ -21,7 +24,7 @@ void VisualisationWidget::updateViewMatrix() {
     viewMatrix.setToIdentity();
     viewMatrix.lookAt(eyePosition, cameraTarget, upVector);
 
-    update();
+    update(); // Request GL redraw
 }
 
 void VisualisationWidget::mousePressEvent(QMouseEvent* event) {
@@ -45,7 +48,6 @@ void VisualisationWidget::mouseMoveEvent(QMouseEvent* event) {
         cameraElevation = std::clamp(cameraElevation, -89.0f, 89.0f);
 
         updateViewMatrix();
-        update(); // Request GL redraw
     }
 }
 
@@ -58,10 +60,10 @@ void VisualisationWidget::wheelEvent(QWheelEvent* event) {
     float zoomFactor = (numSteps > 0) ? 0.9f : 1.1f;
     cameraDistance *= zoomFactor;
 
-    // Enforce safe near/far camera distance limits
-    cameraDistance = std::clamp(cameraDistance, 0.5f, 100.0f);
+    // Prevent clipping inside the target point, allowing unconstrained outward zoom
+    cameraDistance = std::max(cameraDistance, 0.01f);
 
     updateViewMatrix();
-    update(); // Request GL redraw
 }
-}; // namespace boxer
+
+} // namespace boxer

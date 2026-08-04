@@ -1,11 +1,14 @@
 #pragma once
 
-#include "AMReX_AmrCore.H"
+#include "AmrMeshWrapper.hpp"
 #include <QMatrix4x4>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
-#include <iostream>
+
+namespace amrex {
+class AmrMesh;
+}
 
 namespace boxer {
 
@@ -13,30 +16,9 @@ class VisualisationWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3
     Q_OBJECT
 
   public:
-    struct BoxInstanceData {
-        float lo[3]; // AMReX Box Low bounds  (x, y, z)
-        float hi[3]; // AMReX Box High bounds (x, y, z)
-        int level;   // Refinement level
-        int isHalo;  // 0 = interior/normal, 1 = halo (32-bit for GPU attribute alignment)
-
-        // Default constructor
-        BoxInstanceData() : lo{0.0f, 0.0f, 0.0f}, hi{0.0f, 0.0f, 0.0f}, level(0), isHalo(0) {}
-
-        // Constructor taking amrex::RealBox
-        BoxInstanceData(const amrex::RealBox& rb, int lev, bool halo = false) : level(lev), isHalo(halo ? 1 : 0) {
-            lo[0] = static_cast<float>(rb.lo(0));
-            lo[1] = static_cast<float>(rb.lo(1));
-            lo[2] = static_cast<float>(rb.lo(2));
-
-            hi[0] = static_cast<float>(rb.hi(0));
-            hi[1] = static_cast<float>(rb.hi(1));
-            hi[2] = static_cast<float>(rb.hi(2));
-        }
-    };
-
     VisualisationWidget() = delete;
-    VisualisationWidget(const amrex::AmrCore& container, bool showHalo, int ngrow, QWidget* parent = nullptr)
-        : QOpenGLWidget(parent), container(container), showHalo(showHalo), coarsestDisplayLevel(0),
+    VisualisationWidget(const amrex::AmrMesh& container_, bool showHalo, int ngrow, QWidget* parent = nullptr)
+        : QOpenGLWidget(parent), container(container_), showHalo(showHalo), coarsestDisplayLevel(0),
           finestDisplayLevel(container.finestLevel()), ngrow(ngrow) {}
 
     ~VisualisationWidget() override {
@@ -93,7 +75,7 @@ class VisualisationWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3
   private:
     void updateViewMatrix();
 
-    const amrex::AmrCore& container;
+    AmrMeshWrapper container;
 
     bool showHalo;
     int coarsestDisplayLevel;

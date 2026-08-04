@@ -1,14 +1,14 @@
 #include "Boxer.hpp"
-#include "AMReX_AmrCore.H"
 #include "MainWindow.hpp"
 
 #include <QApplication>
-#include <qapplication.h>
-#include <qnamespace.h>
+#include <QEventLoop>
+#include <stdexcept>
 
 namespace boxer {
-void show(const amrex::AmrCore& container, int ngrow, bool blocking) {
-    // Ensure Qt event loop
+
+void show(const amrex::AmrMesh& container, int ngrow, bool blocking) {
+    // Ensure Qt event loop exists
     if (!QApplication::instance()) {
         static int dummy_argc = 1;
         static char dummy_name[] = "Boxer";
@@ -16,12 +16,11 @@ void show(const amrex::AmrCore& container, int ngrow, bool blocking) {
         static QApplication app(dummy_argc, dummy_argv);
     }
 
-    // open a window
-    MainWindow* window = new MainWindow(container, ngrow);
+    // Allocate window on heap; WA_DeleteOnClose cleans it up when closed
+    auto* window = new MainWindow(container, ngrow);
     window->setAttribute(Qt::WA_DeleteOnClose);
     window->show();
 
-    // conditionally run blocking logic
     if (blocking) {
         QEventLoop loop;
         QObject::connect(window, &QObject::destroyed, &loop, &QEventLoop::quit);
@@ -30,4 +29,5 @@ void show(const amrex::AmrCore& container, int ngrow, bool blocking) {
         throw std::runtime_error("Non-blocking execution of boxer::show() has not been implemented yet.");
     }
 }
+
 } // namespace boxer

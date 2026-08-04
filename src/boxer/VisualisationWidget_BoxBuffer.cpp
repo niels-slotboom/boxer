@@ -1,7 +1,8 @@
-#include "AMReX_Box.H"
-#include "AMReX_Geometry.H"
-#include "AMReX_RealBox.H"
+#include "AmrMeshWrapper.hpp"
 #include "VisualisationWidget.hpp"
+
+#include <cmath>
+#include <iterator>
 
 namespace boxer {
 
@@ -9,82 +10,52 @@ void VisualisationWidget::updateBoxData() {
     if (boxVBO == 0)
         return;
 
-    std::vector<BoxInstanceData> instances;
+    std::vector<AmrMeshWrapper::BoxInstanceData> instances;
 
-    // ----------------------------------------------------
-    // 1. Add Full Physical Domain Box (Level = -1)
-    // ----------------------------------------------------
+    // -----------------------------------------------------------------------
+    // 1. Add Full Physical Domain Box (Level = -1) and adjust camera distance
+    // -----------------------------------------------------------------------
     if (container.finestLevel() >= 0) {
-        const amrex::Geometry& level0Geom = container.Geom(0);
-        const amrex::RealBox& probDomain = level0Geom.ProbDomain();
+        AmrMeshWrapper::BoxInstanceData domain = container.getDomain();
 
-        BoxInstanceData domainData;
-        domainData.lo[0] = static_cast<float>(probDomain.lo(0));
-        domainData.lo[1] = static_cast<float>(probDomain.lo(1));
-        domainData.lo[2] = static_cast<float>(probDomain.lo(2));
+        // Calculate domain center
+        float cx = 0.5f * (domain.lo[0] + domain.hi[0]);
+        float cy = 0.5f * (domain.lo[1] + domain.hi[1]);
+        float cz = 0.5f * (domain.lo[2] + domain.hi[2]);
 
-        domainData.hi[0] = static_cast<float>(probDomain.hi(0));
-        domainData.hi[1] = static_cast<float>(probDomain.hi(1));
-        domainData.hi[2] = static_cast<float>(probDomain.hi(2));
+        // Calculate domain size
+        float dx = domain.hi[0] - domain.lo[0];
+        float dy = domain.hi[1] - domain.lo[1];
+        float dz = domain.hi[2] - domain.lo[2];
 
-        domainData.level = -1; // Flag for Domain Box in shader
+        float diagonal = std::sqrt(dx * dx + dy * dy + dz * dz);
+        cameraDistance = 1.8f * diagonal;
 
-        instances.push_back(domainData);
+        cameraTarget = QVector3D(cx, cy, cz);
+
+        instances.push_back(domain);
     }
 
     // ----------------------------------------------------
     // 2. Add Active Level Box Arrays
     // ----------------------------------------------------
     int maxLevel = container.finestLevel();
-    for (int lev = coarsestDisplayLevel; lev <= finestDisplayLevel; ++lev) {
-        if (lev < 0 || lev > maxLevel)
-            continue;
+    int endLevel = std::min(finestDisplayLevel, maxLevel);
 
-        const amrex::BoxArray& ba = container.boxArray(lev);
-        const amrex::Geometry& geom = container.Geom(lev);
-
-        for (int i = 0; i < ba.size(); ++i) {
-            const amrex::Box& bx = ba[i];
-            amrex::RealBox realBox(bx, geom.CellSize(), geom.ProbLo());
-
-            instances.emplace_back(realBox, lev);
-
-            if (showHalo && ngrow > 0) {
-                amrex::RealBox haloRealBox(amrex::grow(bx, ngrow), geom.CellSize(), geom.ProbLo());
-                instances.emplace_back(haloRealBox, lev, true);
-            }
-        }
+    for (int lev = coarsestDisplayLevel; lev <= endLevel; ++lev) {
+        auto boxesAtLevel = container.getBoxesAtLevel(lev, ngrow, showHalo);
+        instances.reserve(instances.size() + boxesAtLevel.size());
+        instances.insert(instances.end(), std::make_move_iterator(boxesAtLevel.begin()),
+                         std::make_move_iterator(boxesAtLevel.end()));
     }
 
     instanceCount = static_cast<int>(instances.size());
 
     makeCurrent();
     glBindBuffer(GL_ARRAY_BUFFER, boxVBO);
-    glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(BoxInstanceData), instances.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(instances.size() * sizeof(AmrMeshWrapper::BoxInstanceData)),
+                 instances.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // set camera to look at center of problem domain
-    if (container.finestLevel() >= 0) {
-        const amrex::Geometry& level0Geom = container.Geom(0);
-        const amrex::RealBox& probDomain = level0Geom.ProbDomain();
-
-        // Calculate domain center
-        float cx = 0.5f * static_cast<float>(probDomain.lo(0) + probDomain.hi(0));
-        float cy = 0.5f * static_cast<float>(probDomain.lo(1) + probDomain.hi(1));
-        float cz = 0.5f * static_cast<float>(probDomain.lo(2) + probDomain.hi(2));
-
-        // Calculate domain size
-        float dx = static_cast<float>(-probDomain.lo(0) + probDomain.hi(0));
-        float dy = static_cast<float>(-probDomain.lo(1) + probDomain.hi(1));
-        float dz = static_cast<float>(-probDomain.lo(2) + probDomain.hi(2));
-
-        float diagonal = std::sqrt(dx * dx + dy * dy + dz * dz);
-        cameraDistance = 1.8 * diagonal;
-
-        cameraTarget = QVector3D(cx, cy, cz);
-    }
-
-    updateViewMatrix();
 
     update();
 }

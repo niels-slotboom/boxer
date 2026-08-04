@@ -2,8 +2,8 @@
 #include <qcheckbox.h>
 
 namespace boxer {
-MainWindow::MainWindow(const amrex::AmrCore& container, int ngrow)
-    : container(container), visualisation(container, false, ngrow, this) {
+MainWindow::MainWindow(const amrex::AmrMesh& container_, int ngrow)
+    : container(container_), visualisation(container_, false, ngrow, this) {
     setMinimumSize(800, 600);
 
     auto* centralWidget = new QWidget(this);

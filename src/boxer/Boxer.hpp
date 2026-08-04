@@ -1,6 +1,11 @@
 #pragma once
-#include "AMReX_AmrCore.H"
+
+namespace amrex {
+class AmrMesh;
+}
 
 namespace boxer {
-void show(const amrex::AmrCore& container, int ngrow = 0, bool blocking = true);
-}
+
+void show(const amrex::AmrMesh& container, int ngrow = 0, bool blocking = true);
+
+} // namespace boxer

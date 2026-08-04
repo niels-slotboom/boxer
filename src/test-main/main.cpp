@@ -41,8 +41,8 @@ int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU d
         // Construct your AmrCore derivative
         int ngrow = 1;
 
-        PortableFunction initialData([] AMREX_GPU_DEVICE(amrex::Real x, amrex::Real y, amrex::Real z, int i, int j,
-                                                         int k) -> amrex::Real { return 1.0; });
+        PortableFunction initialData([] AMREX_GPU_HOST_DEVICE(amrex::Real x, amrex::Real y, amrex::Real z, int i, int j,
+                                                              int k) -> amrex::Real { return 1.0; });
 
         AMRContainer amr(geom, amr_info, initialData, 1, ngrow);
         amr.InitFromScratch(0.0);

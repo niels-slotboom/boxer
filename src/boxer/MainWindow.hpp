@@ -1,28 +1,32 @@
 #pragma once
 
+#include "AmrMeshWrapper.hpp"
 #include "VisualisationWidget.hpp"
-#include <AMReX_AmrCore.H>
 
-#include <QBoxLayout>
 #include <QCheckBox>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QMainWindow>
+#include <QObject>
 #include <QSpinBox>
-#include <qtmetamacros.h>
+#include <QVBoxLayout>
+
+namespace amrex {
+class AmrMesh;
+}
 
 namespace boxer {
 class MainWindow : public QMainWindow {
     Q_OBJECT
   public:
-    MainWindow() = delete;
-    MainWindow(const amrex::AmrCore& container, int ngrow = 0);
+    MainWindow(const amrex::AmrMesh& container, int ngrow = 0);
 
   private:
     void connectLevelSelect();
     void connectShowHalo();
 
   private:
-    const amrex::AmrCore& container; // reference to the displayed data
+    AmrMeshWrapper container; // reference to the displayed data
 
     VisualisationWidget visualisation;
 
