@@ -1,51 +1,65 @@
-## Usage
-It is easiest to pull in this repository using CMake. An example top-level `CMakeLists.txt` is provided below:
-```cmake
-cmake_minimum_required(VERSION 3.15)
+## Prerequisites
 
-project(BoxerApp VERSION 0.1.0 LANGUAGES CXX CUDA)
+* C++20 compatible compiler
+* CMake (3.20+)
+* Qt6 (`Widgets`, `OpenGLWidgets`)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+---
 
-# Fetch Boxer repo from GitHub using FetchContent
-include(FetchContent)
-FetchContent_Declare( 
-    Boxer
-    GIT_REPOSITORY https://github.com/niels-slotboom/boxer.git
-    GIT_TAG        main
-)
+## Installation
 
-set(AMREX_SPACEDIM 3 CACHE STRING "AMReX Space Dimension")
-set(AMREX_GPU_BACKEND CUDA CACHE STRING "AMReX GPU Backend")
-set(AMREX_ENABLE_TESTS OFF CACHE BOOL "Disable AMReX Tests")
+```bash
+git clone https://github.com/niels-slotboom/boxer.git
+cd boxer
 
-FetchContent_MakeAvailable(Boxer)
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
 
-add_executable(boxer-app src/main.cpp)
+# Install to system default (/usr/local)
+sudo cmake --install build
 
-target_link_libraries(boxer-app PRIVATE boxer) # the static library target in the repo is called "boxer"
+# Alternatively, install to a custom directory:
+# cmake --install build --prefix /path/to/install
+
 ```
-The API of `boxer` is provided by `Boxer.hpp`, which contains `boxer::show(const amrex::AmrCore& container, int ngrow)`. 
-This function may be used as in the following example `main.cpp`:
-```cpp
-#include "AMRContainer.hpp"
-#include <Boxer.hpp>
 
-int main(int argc, char* argv[]) { // Initialize AMReX (handles MPI setup, GPU device selection, etc.)
+---
+
+## Downstream Integration
+
+### CMake Setup
+
+```cmake
+find_package(Boxer REQUIRED)
+
+add_executable(my_app main.cpp)
+target_link_libraries(my_app PRIVATE Boxer::boxer)
+
+```
+
+If installed to a custom prefix, pass `-DCMAKE_PREFIX_PATH=/path/to/install` when configuring downstream projects.
+
+---
+
+## Minimal Example
+
+```cpp
+#include <amrex/amrex.hpp>
+#include <Boxer/Boxer.hpp>
+
+int main(int argc, char* argv[]) {
     amrex::Initialize(argc, argv);
     {
-        // Set up geometry and AMR parameters geom, amr_info, ngrow...
+        // Your AMReX mesh instance
+        amrex::AmrMesh mesh;
 
-        AMRContainer amr(geom, amr_info, 1, ngrow);
-        amr.InitFromScratch(0.0);
-        boxer::show(amr, ngrow); // call to Boxer API to open AMR structure visualisation window
+        // Pass to Boxer visualization
+        boxer::show(mesh);
     }
-    // Clean up resources
     amrex::Finalize();
     return 0;
 }
+
 ```
 
 ## License
