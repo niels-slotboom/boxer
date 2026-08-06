@@ -268,8 +268,8 @@ void VisualisationWidget::initializeGL() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    updateViewMatrix();
     updateBoxData();
+    updateViewMatrix();
 }
 
 void VisualisationWidget::resizeGL(int w, int h) {
