@@ -4,8 +4,13 @@
     "[cpp]": {
         "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
     },
-    "cmake.configureArgs": [
-        "-DCMAKE_TOOLCHAIN_FILE=cmake/ClangCudaToolchain.cmake",
-        "-DCMAKE_BUILD_TYPE=Release"
-    ],
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.configureSettings": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "/usr/local"
+    },
+    "cmake.buildArgs": [
+        "--config",
+        "Release"
+    ]
 }

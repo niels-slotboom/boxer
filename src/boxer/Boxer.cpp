@@ -1,4 +1,4 @@
-#include "Boxer.hpp"
+#include "include/Boxer/Boxer.hpp"
 #include "MainWindow.hpp"
 
 #include <QApplication>
